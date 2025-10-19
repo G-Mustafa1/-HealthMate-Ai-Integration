@@ -1,15 +1,9 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "next.config.js",
-      "use": "@vercel/next"
-    }
+    { "src": "next.config.js", "use": "@vercel/next" }
   ],
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://your-backend.vercel.app/api/:path*"
-    }
+  "routes": [
+    { "src": "/(.*)", "dest": "/" }
   ]
 }
