@@ -37,7 +37,7 @@ const userSchema = new Schema(
                     throw new Error("Use Strong Password")
                 }
             }
-        },
+        },  
         gender: {
             type: String,
             validate(value) {

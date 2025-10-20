@@ -1,24 +1,30 @@
 const express = require('express');
 require('dotenv').config();
-const {connectDB} = require("./config/database")
+const { connectDB } = require("./config/database")
 const { profileRouter } = require('./router/profile');
 const { authRouter } = require('./router/auth');
-// const  uploadRouter  = require('./router/upload')
+const { reportRouter } = require('./router/report')
+const { vitalsRouter } = require('./router/vitial')
 const cookieParser = require('cookie-parser');
 const cors = require('cors')
 const app = express();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
   origin: process.env.CLIENT_URL, // Use environment variable or default to localhost
   credentials: true,// Allow cookies to be sent with requests
 }))
 
+console.log(process.env.GEMINI_API_KEY);
 
-app.use('/auth', authRouter); 
+app.use('/auth', authRouter);
 app.use('/profile', profileRouter);
-// app.use('/upload', uploadRouter);
+app.use('/report', reportRouter);
+app.use('/vitals', vitalsRouter);
+
+// require('./gemini-api/gemini')
 app.get('/', (req, res) => {
   res.send('Backend is running 🚀')
 })
