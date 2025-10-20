@@ -25,6 +25,16 @@ export default function Home() {
     e.preventDefault()
     setError("")
 
+    if (!firstname.trim() || firstname.length < 3) {
+      setError("First name must be at least 3 characters.")
+      return
+    }
+
+    if (!lastname.trim() || lastname.length < 3) {
+      setError("Last name must be at least 3 characters.")
+      return
+    }
+
     // ✅ Frontend Validation
     if (!email.trim()) {
       setError("Email are required.")
@@ -36,10 +46,10 @@ export default function Home() {
       return
     }
 
-    if (!isLogin && (!firstname.trim() || !lastname.trim())) {
-      setError("First name and last name are required.")
-      return
-    }
+    // if (!isLogin && (!firstname.trim() || !lastname.trim())) {
+    //   setError("First name and last name are required.")
+    //   return
+    // }
 
     setLoading(true)
 
