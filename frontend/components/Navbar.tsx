@@ -13,21 +13,22 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Button } from "./ui/button";
+import { de } from "date-fns/locale";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export default function Navbar() {
+ function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // null = not checked yet
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
-  // Function to check login
   const checkLogin = async () => {
     try {
       const res = await fetch(`${API_URL}/profile/getuser`, {
         method: "GET",
         credentials: "include",
+        cache: "no-store",
       });
       setIsLoggedIn(res.ok);
     } catch {
@@ -35,10 +36,9 @@ export default function Navbar() {
     }
   };
 
-  // Check login on mount and whenever the path changes
   useEffect(() => {
     checkLogin();
-  }, [pathname]); // re-check login on route change
+  }, [pathname]);
 
   const handleLogout = async () => {
     try {
@@ -47,9 +47,10 @@ export default function Navbar() {
         credentials: "include",
       });
       setIsLoggedIn(false);
-      router.push("/");
+      setOpen(false);
+      router.replace("/");
     } catch (err) {
-      console.error(err);
+      console.error("Logout failed:", err);
     }
   };
 
@@ -69,7 +70,7 @@ export default function Navbar() {
           href={link.href}
           className={`flex items-center gap-2 px-2 py-1 rounded-md ${
             isActive
-              ? "bg-accent  font-semibold text-white"
+              ? "bg-accent text-white font-semibold"
               : "hover:bg-accent/10"
           }`}
           onClick={() => setOpen(false)}
@@ -79,11 +80,10 @@ export default function Navbar() {
       );
     });
 
-  // While checking login, don’t show anything
   if (isLoggedIn === null) return null;
 
   return (
-    <nav className="bg-card border-b border-border w-full">
+    <nav className="relative bg-card border-b border-border w-full">
       <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-0">
         {/* Logo */}
         <div className="flex items-center gap-2">
@@ -97,11 +97,13 @@ export default function Navbar() {
 
         {/* Desktop Links */}
         <div className="hidden md:flex gap-4 items-center">
-          {isLoggedIn && renderLinks()}
           {isLoggedIn && (
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 mr-1" /> Logout
-            </Button>
+            <>
+              {renderLinks()}
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="w-4 h-4 mr-1" /> Logout
+              </Button>
+            </>
           )}
         </div>
 
@@ -118,7 +120,7 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {open && isLoggedIn && (
-          <div className="absolute top-full left-0 w-full bg-card border-t border-border flex flex-col p-4 gap-2 z-50 md:hidden">
+          <div className="absolute left-0 top-full w-full bg-card border-t border-border flex flex-col p-4 gap-2 z-50 shadow-lg md:hidden">
             {renderLinks()}
             <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-1" /> Logout
@@ -129,3 +131,5 @@ export default function Navbar() {
     </nav>
   );
 }
+
+export default Navbar;

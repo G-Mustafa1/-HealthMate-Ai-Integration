@@ -19,14 +19,11 @@ app.use(cors({
 
 }))
 
-console.log(process.env.GEMINI_API_KEY);
-
 app.use('/auth', authRouter);
 app.use('/profile', profileRouter);
 app.use('/report', reportRouter);
 app.use('/vitals', vitalsRouter);
 
-// require('./gemini-api/gemini')
 app.get('/', (req, res) => {
   res.send('Backend is running 🚀')
 })
