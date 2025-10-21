@@ -15,6 +15,8 @@ app.use(cookieParser());
 app.use(cors({
   origin: process.env.CLIENT_URL, // Use environment variable or default to localhost
   credentials: true,// Allow cookies to be sent with requests
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+
 }))
 
 console.log(process.env.GEMINI_API_KEY);

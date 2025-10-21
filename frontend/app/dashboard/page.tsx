@@ -191,7 +191,7 @@ export default function Dashboard() {
                 {reports.map((r) => (
                   <li key={r._id} className="flex justify-between items-center border p-2 rounded-md hover:shadow-md">
                     <span>{r.filename}</span>
-                    <Link href={`/dashboard/report/${r._id}`} target="_blank" rel="noreferrer" className="text-accent underline">View</Link>
+                    <Link href={`/dashboard/reportpage/${r._id}`} target="_blank" rel="noreferrer" className="text-accent underline">View</Link>
                   </li>
                 ))}
               </ul>

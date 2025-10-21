@@ -62,27 +62,43 @@ reportRouter.get('/myreports', userAuth, async (req, res) => {
     }
 });
 
-// Delete report by ID
-reportRouter.delete('/:id', userAuth, async (req, res) => {
-  try {
-    const report = await Report.findById(req.params.id);
-    if (!report) return res.status(404).json({ success: false, message: 'Report not found' });
+// ✅ DELETE route - Delete a report by ID
+reportRouter.delete("/:id", userAuth, async (req, res) => {
+    try {
+        const reportId = req.params.id;
 
-    // Only allow the owner to delete
-    if (report.user.toString() !== req.user._id.toString())
-      return res.status(403).json({ success: false, message: 'Unauthorized' });
+        if (!req.user || !req.user._id) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized. Please login first."
+            });
+        }
 
-    // Delete file from disk
-    const filePath = path.join(__dirname, '../uploads', path.basename(report.fileUrl));
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        const report = await Report.findOneAndDelete({
+            _id: reportId,
+            user: req.user._id // only allow user to delete their own reports
+        });
 
-    await report.remove();
+        if (!report) {
+            return res.status(404).json({
+                success: false,
+                message: "Report not found or you don't have permission to delete it."
+            });
+        }
 
-    res.json({ success: true, message: 'Report deleted successfully' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Server error', error: err.message });
-  }
+        return res.status(200).json({
+            success: true,
+            message: "Report deleted successfully!",
+            report
+        });
+    } catch (err) {
+        console.error("❌ Error deleting report:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error while deleting report.",
+            error: err.message
+        });
+    }
 });
 
 

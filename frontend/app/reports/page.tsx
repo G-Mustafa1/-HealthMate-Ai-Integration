@@ -40,8 +40,6 @@ const Reports = () => {
 
     // Delete report
     const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this report?")) return;
-
         try {
             const res = await fetch(`${API_URL}/report/${id}`, {
                 method: "DELETE",
@@ -53,9 +51,10 @@ const Reports = () => {
             alert("Report deleted successfully!");
         } catch (err: any) {
             console.error(err);
-            alert(err.message || "Error deleting report");
+            alert(`Error: ${err.message}`);
         }
     };
+
 
     if (loading) {
         return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
