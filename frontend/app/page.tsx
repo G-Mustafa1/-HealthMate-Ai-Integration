@@ -1,7 +1,6 @@
 "use client"
 
-import type React from "react"
-import { useState } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Heart, FileText, TrendingUp } from "lucide-react"
 import Swal from "sweetalert2"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 export default function Home() {
   const router = useRouter()
@@ -26,29 +25,15 @@ export default function Home() {
     e.preventDefault()
     setError("")
 
-    // ✅ Frontend Validation
-    if (!email.trim()) {
-      setError("Email are required.")
-      return
-    }
-
-    if(!password.trim() || password.length < 8) {
-      setError("Password must be at least 8 characters.")
-      return
-    }
-
-    if (!isLogin && (!firstname.trim() || firstname.length < 3)) {
-      setError("First name must be at least 3 characters.")
-      return
-    }
-
-    if (!isLogin && (!lastname.trim() || lastname.length < 3)) {
-      setError("Last name must be at least 3 characters.")
-      return
-    }
+    if (!email.trim()) return setError("Email is required.")
+    if (!password.trim() || password.length < 8)
+      return setError("Password must be at least 8 characters.")
+    if (!isLogin && (!firstname.trim() || firstname.length < 3))
+      return setError("First name must be at least 3 characters.")
+    if (!isLogin && (!lastname.trim() || lastname.length < 3))
+      return setError("Last name must be at least 3 characters.")
 
     setLoading(true)
-
     try {
       const endpoint = isLogin
         ? `${API_URL}/auth/login`
@@ -58,34 +43,37 @@ export default function Home() {
         ? { email, password }
         : { firstname, lastname, email, password }
 
-      const response = await fetch(endpoint, {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // ✅ send cookies with request
+        credentials: "include", // ✅ required for cookies
         body: JSON.stringify(body),
       })
 
-      const data = await response.json()
+      const data = await res.json()
 
-      if (!response.ok) {
-        throw new Error(data.error || data.message || "Authentication failed.")
-      }
+      if (!res.ok) throw new Error(data.message || "Authentication failed.")
 
       if (isLogin) {
         localStorage.setItem("user", JSON.stringify(data.user))
-        router.push("/dashboard")
+        Swal.fire({
+          icon: "success",
+          title: "Welcome!",
+          text: "Login successful.",
+          timer: 1200,
+          showConfirmButton: false,
+        })
+        router.replace("/dashboard") // ✅ better redirect for Vercel
       } else {
         Swal.fire({
           icon: "success",
-          title: "Signup successful! Please login now.",
+          title: "Signup successful!",
           text: "Please login now.",
         })
-        // alert("Signup successful! Please login now.")
         setIsLogin(true)
       }
-
     } catch (err: any) {
-      setError(err.message || "An error occurred. Please try again.")
+      setError(err.message || "Something went wrong. Try again.")
     } finally {
       setLoading(false)
     }
@@ -94,7 +82,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background flex items-center justify-center p-4">
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
-        {/* Left side - Features */}
+        {/* Left */}
         <div className="hidden md:block space-y-8">
           <div>
             <div className="flex items-center gap-3 mb-4">
@@ -110,37 +98,36 @@ export default function Home() {
             <div className="flex gap-4">
               <FileText className="w-6 h-6 text-accent flex-shrink-0 mt-1" />
               <div>
-                <h3 className="font-semibold text-foreground mb-1">Upload Reports</h3>
-                <p className="text-sm text-muted-foreground">Store all your medical reports safely in one place</p>
-                <input type="file" />
+                <h3 className="font-semibold mb-1">Upload Reports</h3>
+                <p className="text-sm text-muted-foreground">
+                  Store your medical reports safely in one place.
+                </p>
               </div>
             </div>
 
             <div className="flex gap-4">
               <Heart className="w-6 h-6 text-accent flex-shrink-0 mt-1" />
               <div>
-                <h3 className="font-semibold text-foreground mb-1">AI-Powered Analysis</h3>
-                <p className="text-sm text-muted-foreground">Get instant summaries in English & Roman Urdu</p>
+                <h3 className="font-semibold mb-1">AI-Powered Analysis</h3>
+                <p className="text-sm text-muted-foreground">
+                  Get instant summaries in English & Roman Urdu.
+                </p>
               </div>
             </div>
 
             <div className="flex gap-4">
               <TrendingUp className="w-6 h-6 text-accent flex-shrink-0 mt-1" />
               <div>
-                <h3 className="font-semibold text-foreground mb-1">Track Your Health</h3>
-                <p className="text-sm text-muted-foreground">Monitor vitals and view your complete medical timeline</p>
+                <h3 className="font-semibold mb-1">Track Your Health</h3>
+                <p className="text-sm text-muted-foreground">
+                  Monitor vitals and view your medical timeline.
+                </p>
               </div>
             </div>
           </div>
-
-          <div className="pt-8 border-t border-border">
-            <p className="text-xs text-muted-foreground">
-              ⚕️ AI is for understanding only, not for medical advice. Always consult your doctor.
-            </p>
-          </div>
         </div>
 
-        {/* Right side - Auth Form */}
+        {/* Right - Auth Form */}
         <Card className="w-full max-w-md mx-auto">
           <CardHeader>
             <CardTitle>{isLogin ? "Welcome Back" : "Create Account"}</CardTitle>
@@ -148,76 +135,72 @@ export default function Home() {
               {isLogin ? "Sign in to your health vault" : "Start managing your health today"}
             </CardDescription>
           </CardHeader>
+
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
                 <>
-                  <div className="space-y-2">
+                  <div>
                     <Label htmlFor="firstname">First Name</Label>
                     <Input
                       id="firstname"
-                      placeholder="Your first name"
                       value={firstname}
                       onChange={(e) => setFirstname(e.target.value)}
+                      placeholder="Your first name"
                     />
                   </div>
-
-                  <div className="space-y-2">
+                  <div>
                     <Label htmlFor="lastname">Last Name</Label>
                     <Input
                       id="lastname"
-                      placeholder="Your last name"
                       value={lastname}
                       onChange={(e) => setLastname(e.target.value)}
+                      placeholder="Your last name"
                     />
                   </div>
                 </>
               )}
 
-              <div className="space-y-2">
+              <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@email.com"
                 />
               </div>
 
-              <div className="space-y-2">
+              <div>
                 <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
                 />
               </div>
 
-              {error && (
-                <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md">
-                  {error}
-                </div>
-              )}
+              {error && <p className="text-sm text-destructive">{error}</p>}
 
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Processing..." : isLogin ? "Sign In" : "Sign Up"}
               </Button>
             </form>
 
-            <div className="mt-6 pt-6 border-t border-border">
-              <p className="text-sm text-muted-foreground text-center mb-4">
-                {isLogin ? "Don't have an account?" : "Already have an account?"}
+            <div className="mt-6 pt-6 border-t border-border text-center">
+              <p className="text-sm text-muted-foreground mb-4">
+                {isLogin ? "Don’t have an account?" : "Already have an account?"}
               </p>
               <Button
                 variant="outline"
-                className="w-full bg-transparent"
                 onClick={() => {
                   setIsLogin(!isLogin)
                   setError("")
                 }}
+                className="w-full bg-transparent"
               >
                 {isLogin ? "Sign Up" : "Sign In"}
               </Button>
