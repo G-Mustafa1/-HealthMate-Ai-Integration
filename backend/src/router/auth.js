@@ -5,19 +5,23 @@ const jwt = require('jsonwebtoken');
 const { User } = require('../models/user');
 const validator = require('validator');
 
-
 authRouter.post('/signup', async (req, res) => {
     try {
         const { firstname, lastname, email, password } = req.body;
 
         if (!firstname || !lastname) {
-            throw new Error("First name and last name are required");
+            return res.status(400).json({ error: "First name and last name are required" });
         }
         if (!validator.isEmail(email)) {
-            throw new Error("Invalid email format");
+            return res.status(400).json({ error: "Invalid email format" });
         }
         if (!validator.isStrongPassword(password)) {
-            throw new Error("Password must be strong (min 8 chars, uppercase, number, symbol)");
+            return res.status(400).json({ error: "Password must be strong (min 8 chars, uppercase, number, symbol)" });
+        }
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ error: "Email already registered" });
         }
 
         const hashedPassword = await bcrypt.hash(password, Number(process.env.HASH_PASS));
@@ -33,15 +37,16 @@ authRouter.post('/signup', async (req, res) => {
 
         const token = jwt.sign({ id: newUser._id }, process.env.SECRET_KEY, { expiresIn: '1d' });
 
+        // ✅ COOKIE SETTINGS (Vercel Ready)
         res.cookie("token", token, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none", // ✅ important for cross-site
+            secure: true, // Required on Vercel (HTTPS)
+            sameSite: "none", // Required for cross-origin cookies
             path: "/",
-            maxAge: 24 * 60 * 60 * 1000
+            maxAge: 24 * 60 * 60 * 1000, // 1 day
         });
 
-        res.status(200).json({ message: 'User signed up successfully' });
+        res.status(200).json({ message: 'User signed up successfully', user: newUser });
 
     } catch (error) {
         console.error('Error during signup:', error.message);
@@ -49,31 +54,29 @@ authRouter.post('/signup', async (req, res) => {
     }
 });
 
-
 authRouter.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
         const user = await User.findOne({ email });
         if (!user) {
-            throw new Error("User not found, signup first");
+            return res.status(404).json({ error: "User not found, signup first" });
         }
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
-            throw new Error("Invalid credentials");
+            return res.status(401).json({ error: "Invalid credentials" });
         }
 
-        const token = jwt.sign({ id: user._id }, process.env.SECRET_KEY, {
-            expiresIn: '1d',
-        });
+        const token = jwt.sign({ id: user._id }, process.env.SECRET_KEY, { expiresIn: '1d' });
 
+        // ✅ Vercel-friendly cookie
         res.cookie("token", token, {
             httpOnly: true,
             secure: true,
-            sameSite: "none", // ✅ important for cross-site
+            sameSite: "none",
             path: "/",
-            maxAge: 24 * 60 * 60 * 1000
+            maxAge: 24 * 60 * 60 * 1000,
         });
 
         res.status(200).json({ message: 'Login successful', user });
@@ -86,9 +89,14 @@ authRouter.post('/login', async (req, res) => {
 
 authRouter.post('/logout', (req, res) => {
     try {
-        // console.log("Cookies:", req.cookies);
-        res.clearCookie("token");
-        res.send("logout successful");
+        // ✅ Also clear cookie cross-site correctly
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+            path: "/",
+        });
+        res.status(200).json({ message: "Logout successful" });
     } catch (error) {
         console.error('Error during logout:', error.message);
         res.status(500).send({ error: 'Error during logout', message: error.message });
@@ -97,4 +105,4 @@ authRouter.post('/logout', (req, res) => {
 
 module.exports = {
     authRouter
-}; 
+};

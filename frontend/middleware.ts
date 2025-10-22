@@ -6,17 +6,25 @@ export function middleware(req: NextRequest) {
   const protectedPaths = ["/dashboard", "/vitals", "/reports", "/insights"];
   const currentPath = req.nextUrl.pathname;
 
-  // Agar user login nahi hai aur protected route par ja raha hai → redirect
+  // ✅ If visiting protected route and no token found → redirect to home
   if (!token && protectedPaths.some((path) => currentPath.startsWith(path))) {
-    return NextResponse.redirect(new URL("/", req.url));
+    const loginUrl = new URL("/", req.url);
+    loginUrl.searchParams.set("redirected", "true"); // optional for debugging
+    return NextResponse.redirect(loginUrl);
   }
 
-  // Agar login hai → allow
+  // ✅ If logged in user visits "/" (login page) → redirect to dashboard
+  if (token && currentPath === "/") {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+  // ✅ Otherwise continue
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
+    "/",
     "/dashboard/:path*",
     "/vitals/:path*",
     "/reports/:path*",
