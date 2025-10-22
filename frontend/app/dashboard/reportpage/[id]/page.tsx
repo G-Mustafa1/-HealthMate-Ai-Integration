@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic"; 
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -8,6 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { FileText, Heart } from "lucide-react";
 import Link from "next/link";
+import Swal from "sweetalert2";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -61,7 +62,18 @@ export default function ReportPage() {
 
 
     const handleDelete = async () => {
-        if (!confirm("Are you sure you want to delete this report?")) return;
+        // if (!confirm("Are you sure you want to delete this report?")) return;
+        const result = await Swal.fire({
+            title: "Are you sure?",
+            text: "This action cannot be undone!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!",
+        });
+
+        if (!result.isConfirmed) return;
         try {
             const res = await fetch(`${API_URL}/report/${params.id}`, {
                 method: "DELETE",
@@ -69,11 +81,12 @@ export default function ReportPage() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Failed to delete report");
-            alert("Report deleted successfully!");
+            // alert("Report deleted successfully!");
             router.push("/dashboard"); // redirect to dashboard after deletion
         } catch (err: any) {
             console.error(err);
-            alert(`Error: ${err.message}`);
+            // alert(`Error: ${err.message}`);
+            Swal.fire("Error", err.message || "Error deleting report", "error");
         }
     };
     const handleBack = () => {
