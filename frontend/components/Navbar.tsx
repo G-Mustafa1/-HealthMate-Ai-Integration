@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 import { useState, useEffect } from "react";
 import {
   Menu,
@@ -11,17 +12,18 @@ import {
   FileText,
   Activity,
   TrendingUp,
+  UserPlus,
+  LogIn,
 } from "lucide-react";
 import { Button } from "./ui/button";
-import { de } from "date-fns/locale";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
- function Navbar() {
+export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [user, setUser] = useState(null);
 
   const checkLogin = async () => {
     try {
@@ -30,9 +32,14 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
         credentials: "include",
         cache: "no-store",
       });
-      setIsLoggedIn(res.ok);
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data?.user || null);
+      } else {
+        setUser(null);
+      }
     } catch {
-      setIsLoggedIn(false);
+      setUser(null);
     }
   };
 
@@ -46,11 +53,13 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
         method: "POST",
         credentials: "include",
       });
-      setIsLoggedIn(false);
+      Swal.fire("Success", "Logged out successfully", "success");
+      setUser(null);
       setOpen(false);
       router.replace("/");
     } catch (err) {
       console.error("Logout failed:", err);
+      Swal.fire("Error", "Logout failed", "error");
     }
   };
 
@@ -68,11 +77,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
         <Link
           key={link.href}
           href={link.href}
-          className={`flex items-center gap-2 px-2 py-1 rounded-md ${
-            isActive
-              ? "bg-accent text-white font-semibold"
+          className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${isActive
+              ? "bg-primary text-white font-semibold shadow"
               : "hover:bg-accent/10"
-          }`}
+            }`}
           onClick={() => setOpen(false)}
         >
           {link.icon} {link.name}
@@ -80,56 +88,101 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
       );
     });
 
-  if (isLoggedIn === null) return null;
-
   return (
-    <nav className="relative bg-card border-b border-border w-full">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-0">
+    <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-5 py-4 flex justify-between items-center">
         {/* Logo */}
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
             <Heart className="w-5 h-5 text-primary-foreground animate-pulse" />
           </div>
-          <Link href="/" className="font-bold text-xl">
+          <Link href="/" className="text-2xl font-bold text-gray-800">
             HealthMate
           </Link>
         </div>
 
-        {/* Desktop Links */}
-        <div className="hidden md:flex gap-4 items-center">
-          {isLoggedIn && (
+        {/* Desktop Menu */}
+        <div className="hidden md:flex items-center gap-5">
+          {user ? (
             <>
               {renderLinks()}
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="w-4 h-4 mr-1" /> Logout
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+                onClick={handleLogout}
+              >
+                <LogOut className="w-4 h-4" /> Logout
               </Button>
+            </>
+          ) : (
+            <>
+              <Link href="/">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <LogIn className="w-4 h-4" /> Login
+                </Button>
+              </Link>
+              <Link href="/">
+                <Button size="sm" className="flex items-center gap-2">
+                  <UserPlus className="w-4 h-4" /> Register
+                </Button>
+              </Link>
             </>
           )}
         </div>
 
-        {/* Mobile Menu Button */}
-        <div className="md:hidden self-end">
-          <button
-            className="p-2 rounded-md hover:bg-accent/10"
-            onClick={() => setOpen(!open)}
-            aria-label="Toggle Menu"
-          >
-            {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
+        {/* Mobile Toggle */}
+        <button
+          className="md:hidden p-2 rounded-md hover:bg-gray-100 transition"
+          onClick={() => setOpen(!open)}
+          aria-label="Toggle Menu"
+        >
+          {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
 
-        {/* Mobile Menu */}
-        {open && isLoggedIn && (
-          <div className="absolute left-0 top-full w-full bg-card border-t border-border flex flex-col p-4 gap-2 z-50 shadow-lg md:hidden">
-            {renderLinks()}
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 mr-1" /> Logout
-            </Button>
-          </div>
-        )}
+      {/* Mobile Menu */}
+      <div
+        className={`md:hidden bg-white border-t border-gray-200 transition-all duration-300 overflow-hidden ${open ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+      >
+        <div className="flex flex-col p-4 space-y-3">
+          {user ? (
+            <>
+              {renderLinks()}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" /> Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link href="/" onClick={() => setOpen(false)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full flex items-center gap-2"
+                >
+                  <LogIn className="w-4 h-4" /> Login
+                </Button>
+              </Link>
+              <Link href="/" onClick={() => setOpen(false)}>
+                <Button size="sm" className="w-full flex items-center gap-2">
+                  <UserPlus className="w-4 h-4" /> Register
+                </Button>
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </nav>
   );
 }
-
-export default Navbar;

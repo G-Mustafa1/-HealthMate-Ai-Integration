@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Trash2 } from "lucide-react";
+import Swal from "sweetalert2";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface Vital {
   _id: string;
@@ -39,7 +40,7 @@ export default function Vitals() {
   }, []);
 
   const handleAdd = async () => {
-    if (!form.bp && !form.sugar && !form.weight) return alert("Enter at least one vital");
+    if (!form.bp && !form.sugar && !form.weight) return Swal.fire("Error", "At least one vital is required", "error");
     try {
       const res = await fetch(`${API_URL}/vitals/add`, {
         method: "POST",
@@ -53,12 +54,23 @@ export default function Vitals() {
       setForm({ bp: "", sugar: "", weight: "", note: "" });
     } catch (err: any) {
       console.error(err);
-      alert(`Error: ${err.message}`);
+      Swal.fire("Error", err.message || "Error adding vital", "error");
+      // alert(`Error: ${err.message}`);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this vital entry?")) return;
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This action cannot be undone!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (!result.isConfirmed) return;
     try {
       const res = await fetch(`${API_URL}/vitals/${id}`, {
         method: "DELETE",
@@ -69,7 +81,8 @@ export default function Vitals() {
       setVitals(vitals.filter(v => v._id !== id));
     } catch (err: any) {
       console.error(err);
-      alert(`Error: ${err.message}`);
+      Swal.fire("Error", err.message || "Error deleting", "error");
+      // alert(`Error: ${err.message}`);
     }
   };
 

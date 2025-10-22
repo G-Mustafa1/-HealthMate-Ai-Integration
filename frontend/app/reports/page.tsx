@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FileText, Trash2 } from "lucide-react";
 import Link from "next/link";
+import Swal from 'sweetalert2';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface Report {
     _id: string;
@@ -48,10 +49,21 @@ const Reports = () => {
             if (!res.ok) throw new Error("Failed to delete report");
 
             setReports((prev) => prev.filter((r) => r._id !== id));
-            alert("Report deleted successfully!");
+            const result = await Swal.fire({
+                title: "Are you sure?",
+                text: "This action cannot be undone!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, delete it!",
+            });
+
+            if (!result.isConfirmed) return;
+            // alert("Report deleted successfully!");
         } catch (err: any) {
             console.error(err);
-            alert(`Error: ${err.message}`);
+            Swal.fire("Error", err.message || "Error deleting report", "error");
         }
     };
 

@@ -37,6 +37,7 @@ authRouter.post('/signup', async (req, res) => {
             httpOnly: true,
             secure: true,
             sameSite: "none", // ✅ important for cross-site
+            path: "/",
             maxAge: 24 * 60 * 60 * 1000
         });
 
@@ -71,6 +72,7 @@ authRouter.post('/login', async (req, res) => {
             httpOnly: true,
             secure: true,
             sameSite: "none", // ✅ important for cross-site
+            path: "/",
             maxAge: 24 * 60 * 60 * 1000
         });
 

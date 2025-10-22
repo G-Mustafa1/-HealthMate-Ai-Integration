@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic"; // ✅ ensures Next.js handles dynamic route on Vercel
+export const dynamic = "force-dynamic"; 
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Heart } from "lucide-react";
 import Link from "next/link";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface Report {
     _id: string;

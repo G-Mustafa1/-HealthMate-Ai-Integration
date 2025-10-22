@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Heart, FileText, TrendingUp } from "lucide-react"
+import Swal from "sweetalert2"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Home() {
   const router = useRouter()
@@ -74,7 +75,12 @@ export default function Home() {
         localStorage.setItem("user", JSON.stringify(data.user))
         router.push("/dashboard")
       } else {
-        alert("Signup successful! Please login now.")
+        Swal.fire({
+          icon: "success",
+          title: "Signup successful! Please login now.",
+          text: "Please login now.",
+        })
+        // alert("Signup successful! Please login now.")
         setIsLogin(true)
       }
 

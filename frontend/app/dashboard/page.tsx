@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Heart, LogOut, Plus, FileText, Activity } from "lucide-react";
 import Link from "next/link";
+import Swal from "sweetalert2";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface User {
   id?: string;
@@ -68,18 +69,6 @@ export default function Dashboard() {
     fetchUser();
   }, [router]);
 
-  // Logout
-  const handleLogout = async () => {
-    try {
-      await fetch(`${API_URL}/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-      router.push("/");
-    } catch (error) {
-      console.error("Error logging out:", error);
-    }
-  };
 
   // Trigger file input
   const handleUploadClick = () => {
@@ -89,11 +78,11 @@ export default function Dashboard() {
   // Upload report
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return alert("Please select a valid file");
+    if (!file) return Swal.fire("Error", "No file selected", "error");
 
     // Validate file type
     const allowed = ["application/pdf", "image/png", "image/jpeg"];
-    if (!allowed.includes(file.type)) return alert("Only PDF, PNG, JPG allowed!");
+    if (!allowed.includes(file.type)) return Swal.fire("Error", "Only PDF, PNG, JPG allowed!", "error");
 
     const formData = new FormData();
     formData.append("file", file);
@@ -108,11 +97,13 @@ export default function Dashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Upload failed");
 
-      alert("✅ Report uploaded successfully!");
+      // alert("✅ Report uploaded successfully!");
+      Swal.fire("Success", "Report uploaded successfully!", "success");
       setReports((prev) => [data.report, ...prev]);
     } catch (err: any) {
       console.error(err);
-      alert(`❌ ${err.message || "Error uploading file"}`);
+      Swal.fire("Error", err.message || "Error uploading file", "error");
+      // alert(`❌ ${err.message || "Error uploading file"}`);
     }
   };
 
