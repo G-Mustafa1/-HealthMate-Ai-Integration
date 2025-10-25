@@ -5,8 +5,9 @@ const reportSchema = new Schema(
   {
     user: { 
       type: mongoose.Schema.Types.ObjectId, 
-      ref: "User", required: 
-      true },
+      ref: "User", 
+      required: true 
+    },
     fileUrl: { 
       type: String 
     },        // local path or cloud URL

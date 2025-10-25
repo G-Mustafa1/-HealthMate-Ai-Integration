@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Heart, LogOut, Plus, FileText, Activity } from "lucide-react";
+import { Plus, FileText, Activity } from "lucide-react";
 import Link from "next/link";
 import Swal from "sweetalert2";
 
@@ -25,14 +25,13 @@ interface Report {
 }
 
 export default function Dashboard() {
-  const params = useParams();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [reports, setReports] = useState<Report[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch user and reports
+  // Fetch user + reports
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -49,11 +48,11 @@ export default function Dashboard() {
         const data = await res.json();
         setUser(data.user);
 
-        // Fetch reports after user is loaded
         const reportRes = await fetch(`${API_URL}/report/myreports`, {
           method: "GET",
           credentials: "include",
         });
+
         if (reportRes.ok) {
           const reportData = await reportRes.json();
           setReports(reportData.reports || []);
@@ -69,20 +68,20 @@ export default function Dashboard() {
     fetchUser();
   }, [router]);
 
-
-  // Trigger file input
+  // Upload button trigger
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
 
-  // Upload report
+  // Upload report to Cloudinary via backend
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return Swal.fire("Error", "No file selected", "error");
 
-    // Validate file type
     const allowed = ["application/pdf", "image/png", "image/jpeg"];
-    if (!allowed.includes(file.type)) return Swal.fire("Error", "Only PDF, PNG, JPG allowed!", "error");
+    if (!allowed.includes(file.type)) {
+      return Swal.fire("Error", "Only PDF, PNG, JPG allowed!", "error");
+    }
 
     const formData = new FormData();
     formData.append("file", file);
@@ -97,30 +96,25 @@ export default function Dashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Upload failed");
 
-      // alert("✅ Report uploaded successfully!");
       Swal.fire("Success", "Report uploaded successfully!", "success");
+
+      // ✅ Add newly uploaded Cloudinary report to state
       setReports((prev) => [data.report, ...prev]);
     } catch (err: any) {
       console.error(err);
       Swal.fire("Error", err.message || "Error uploading file", "error");
-      // alert(`❌ ${err.message || "Error uploading file"}`);
     }
   };
 
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">Loading...</div>
-    );
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   return (
     <div className="min-h-screen bg-background">
-
-      {/* Main */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-foreground mb-2">
+          <h2 className="text-3xl font-bold mb-2">
             Welcome, {user?.firstname ? `${user.firstname} ${user.lastname}` : user?.name || "User"}!
           </h2>
           <p className="text-muted-foreground">Manage your health reports and vitals in one place</p>
@@ -162,7 +156,7 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Reports Section */}
+        {/* Reports */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -180,9 +174,15 @@ export default function Dashboard() {
             ) : (
               <ul className="space-y-3">
                 {reports.map((r) => (
-                  <li key={r._id} className="flex justify-between items-center border p-2 rounded-md hover:shadow-md">
+                  <li
+                    key={r._id}
+                    className="flex justify-between items-center border p-2 rounded-md hover:shadow-md"
+                  >
                     <span>{r.filename}</span>
-                    <Link href={`/dashboard/reportpage/${r._id}`} target="_blank" rel="noreferrer" className="text-accent underline">View</Link>
+                    {/* ✅ View Cloudinary file directly */}
+                    <Link href={`/dashboard/reportpage/${r._id}`} target="_blank" rel="noreferrer" className="text-accent underline">
+                      View
+                    </Link>
                   </li>
                 ))}
               </ul>

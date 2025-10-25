@@ -7,7 +7,6 @@ import { useParams, useRouter } from "next/navigation";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { FileText, Heart } from "lucide-react";
-import Link from "next/link";
 import Swal from "sweetalert2";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -33,6 +32,7 @@ export default function ReportPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
+    // ✅ Fetch report details by ID
     useEffect(() => {
         const fetchReport = async () => {
             if (!params.id) return setError("Invalid report ID");
@@ -42,12 +42,9 @@ export default function ReportPage() {
                     credentials: "include",
                 });
 
-                if (!res.ok) {
-                    const data = await res.json();
-                    throw new Error(data.message || "Failed to fetch report");
-                }
-
                 const data = await res.json();
+
+                if (!res.ok) throw new Error(data.message || "Failed to fetch report");
                 setReport(data.report);
             } catch (err: any) {
                 console.error("Error fetching report:", err);
@@ -60,9 +57,8 @@ export default function ReportPage() {
         fetchReport();
     }, [params.id]);
 
-
+    // ✅ Delete report
     const handleDelete = async () => {
-        // if (!confirm("Are you sure you want to delete this report?")) return;
         const result = await Swal.fire({
             title: "Are you sure?",
             text: "This action cannot be undone!",
@@ -74,58 +70,58 @@ export default function ReportPage() {
         });
 
         if (!result.isConfirmed) return;
+
         try {
             const res = await fetch(`${API_URL}/report/${params.id}`, {
                 method: "DELETE",
                 credentials: "include",
             });
             const data = await res.json();
+
             if (!res.ok) throw new Error(data.message || "Failed to delete report");
-            // alert("Report deleted successfully!");
-            router.push("/dashboard"); // redirect to dashboard after deletion
+
+            Swal.fire("Deleted!", "Your report has been deleted.", "success");
+            router.push("/dashboard");
         } catch (err: any) {
             console.error(err);
-            // alert(`Error: ${err.message}`);
             Swal.fire("Error", err.message || "Error deleting report", "error");
         }
     };
+
+    // ✅ Navigate back
     const handleBack = () => {
-        if (window.history.length > 1) {
-            router.back();
-        } else {
-            router.push("/dashboard");
-        }
+        if (window.history.length > 1) router.back();
+        else router.push("/dashboard");
     };
 
-    if (loading) {
+    // ✅ Loading UI
+    if (loading)
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <Spinner className="mr-2 w-6 h-6 animate-spin" />
                 Loading report...
             </div>
         );
-    }
 
-    if (error) {
+    // ✅ Error UI
+    if (error)
         return (
             <div className="flex flex-col items-center justify-center min-h-screen">
                 <p className="text-red-500 text-lg mb-4">{error}</p>
-                <Button onClick={() => handleBack()}>Go Back</Button>
-                <Button onClick={() => handleDelete()}>Delete Report</Button>
+                <Button onClick={handleBack}>Go Back</Button>
             </div>
         );
-    }
 
-    if (!report) {
+    // ✅ No report found
+    if (!report)
         return (
             <div className="flex flex-col items-center justify-center min-h-screen">
                 <p className="text-muted-foreground">Report not found</p>
-                <Button onClick={() => handleBack()}>Go Back</Button>
-                <Button onClick={() => handleDelete()}>Delete Report</Button>
+                <Button onClick={handleBack}>Go Back</Button>
             </div>
         );
-    }
 
+    // ✅ Main UI
     return (
         <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto">
             {/* Header */}
@@ -136,10 +132,11 @@ export default function ReportPage() {
                 <h1 className="text-2xl font-bold">HealthMate Report</h1>
             </div>
 
-            {/* Report Details */}
+            {/* Report Card */}
             <div className="bg-card p-6 rounded-lg shadow-md space-y-4">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-accent" /> {report.title || report.filename}
+                    <FileText className="w-5 h-5 text-accent" />{" "}
+                    {report.title || report.filename}
                 </h2>
 
                 <p>
@@ -155,7 +152,7 @@ export default function ReportPage() {
                             rel="noreferrer"
                             className="text-accent underline"
                         >
-                            {report.filename}
+                            View File
                         </a>
                     </p>
                 ) : (
@@ -169,37 +166,35 @@ export default function ReportPage() {
 
                 <div>
                     <strong>Explanation (EN):</strong>
-                    <p className="mt-1">{report.explanation_en || "No explanation available"}</p>
+                    <p className="mt-1">{report.explanation_en || "No explanation"}</p>
                 </div>
 
                 <div>
                     <strong>Explanation (UR):</strong>
-                    <p className="mt-1">{report.explanation_ro || "No explanation available"}</p>
+                    <p className="mt-1">{report.explanation_ro || "No explanation"}</p>
                 </div>
 
-                {report.suggested_questions && report.suggested_questions.length > 0 && (
+                {report.suggested_questions?.length > 0 && (
                     <div>
                         <strong>Suggested Questions:</strong>
                         <ul className="list-disc list-inside mt-1">
-                            {report.suggested_questions.map((q, idx) => (
-                                <li key={idx}>{q}</li>
+                            {report.suggested_questions.map((q, i) => (
+                                <li key={i}>{q}</li>
                             ))}
                         </ul>
                     </div>
                 )}
 
-                <div className="flex justify-between mt-4">
-                    <p className="text-sm text-muted-foreground">
-                        Created: {new Date(report.createdAt).toLocaleString()}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                        Updated: {new Date(report.updatedAt).toLocaleString()}
-                    </p>
+                <div className="flex justify-between mt-4 text-sm text-muted-foreground">
+                    <p>Created: {new Date(report.createdAt).toLocaleString()}</p>
+                    <p>Updated: {new Date(report.updatedAt).toLocaleString()}</p>
                 </div>
 
                 <div className="mt-4 flex gap-2">
-                    <Button onClick={() => handleBack()}>Go Back</Button>
-                    <Button onClick={() => handleDelete()}>Delete Report</Button>
+                    <Button onClick={handleBack}>Go Back</Button>
+                    <Button variant="destructive" onClick={handleDelete}>
+                        Delete Report
+                    </Button>
                 </div>
             </div>
         </div>
