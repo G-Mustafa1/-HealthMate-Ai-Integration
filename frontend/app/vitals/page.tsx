@@ -1,159 +1,115 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React from 'react'
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Trash2 } from "lucide-react";
-import Swal from "sweetalert2";
+import { FileText, Trash2 } from "lucide-react";
+import Link from "next/link";
+import Swal from 'sweetalert2';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-interface Vital {
-  _id: string;
-  bp?: string;
-  sugar?: string;
-  weight?: string;
-  note?: string;
-  date: string;
+interface Report {
+    _id: string;
+    filename: string;
+    fileUrl: string;
+    title: string;
+    dateSeen: string;
+    summary: string;
 }
 
-export default function Vitals() {
-  const [vitals, setVitals] = useState<Vital[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ bp: "", sugar: "", weight: "", note: "" });
+const Reports = () => {
+    const [reports, setReports] = useState<Report[]>([]);
+    const [loading, setLoading] = useState(true);
 
-  const fetchVitals = async () => {
-    try {
-      const res = await fetch(`${API_URL}/vitals/myvitals`, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch vitals");
-      const data = await res.json();
-      setVitals(data.vitals || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+    useEffect(() => {
+        const fetchReports = async () => {
+            try {
+                const res = await fetch(`${API_URL}/report/myreports`, { credentials: "include" });
+                if (!res.ok) throw new Error("Failed to fetch reports");
+                const data = await res.json();
+                setReports(data.reports || []);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchReports();
+    }, []);
+
+    // Delete report
+    const handleDelete = async (id: string) => {
+        try {
+            const res = await fetch(`${API_URL}/report/${id}`, {
+                method: "DELETE",
+                credentials: "include",
+            });
+            if (!res.ok) throw new Error("Failed to delete report");
+
+            setReports((prev) => prev.filter((r) => r._id !== id));
+            const result = await Swal.fire({
+                title: "Are you sure?",
+                text: "This action cannot be undone!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, delete it!",
+            });
+
+            if (!result.isConfirmed) return;
+            // alert("Report deleted successfully!");
+        } catch (err: any) {
+            console.error(err);
+            Swal.fire("Error", err.message || "Error deleting report", "error");
+        }
+    };
+
+
+    if (loading) {
+        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
     }
-  };
+    return (
+        <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+            <h1 className="text-3xl font-bold mb-4">Your Reports</h1>
 
-  useEffect(() => {
-    fetchVitals();
-  }, []);
-
-  const handleAdd = async () => {
-    if (!form.bp && !form.sugar && !form.weight) return Swal.fire("Error", "At least one vital is required", "error");
-    try {
-      const res = await fetch(`${API_URL}/vitals/add`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to add vital");
-      setVitals([data.vitals, ...vitals]);
-      setForm({ bp: "", sugar: "", weight: "", note: "" });
-    } catch (err: any) {
-      console.error(err);
-      Swal.fire("Error", err.message || "Error adding vital", "error");
-      // alert(`Error: ${err.message}`);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    const result = await Swal.fire({
-      title: "Are you sure?",
-      text: "This action cannot be undone!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    });
-
-    if (!result.isConfirmed) return;
-    try {
-      const res = await fetch(`${API_URL}/vitals/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to delete");
-      setVitals(vitals.filter(v => v._id !== id));
-    } catch (err: any) {
-      console.error(err);
-      Swal.fire("Error", err.message || "Error deleting", "error");
-      // alert(`Error: ${err.message}`);
-    }
-  };
-
-  if (loading) return <p className="text-center py-8">Loading vitals...</p>;
-
-  return (
-    <main className="max-w-3xl mx-auto px-4 py-8 space-y-4">
-      <h2 className="text-2xl font-bold mb-4">Your Vitals</h2>
-
-      {/* Add Vitals Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Add New Vital</CardTitle>
-          <CardDescription>Track your BP, Sugar, Weight, or Notes</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <input
-            type="text"
-            placeholder="BP (e.g., 120/80)"
-            className="w-full border p-2 rounded"
-            value={form.bp}
-            onChange={e => setForm({ ...form, bp: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Sugar (mg/dL)"
-            className="w-full border p-2 rounded"
-            value={form.sugar}
-            onChange={e => setForm({ ...form, sugar: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Weight (kg)"
-            className="w-full border p-2 rounded"
-            value={form.weight}
-            onChange={e => setForm({ ...form, weight: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Note (optional)"
-            className="w-full border p-2 rounded"
-            value={form.note}
-            onChange={e => setForm({ ...form, note: e.target.value })}
-          />
-          <Button className="w-full" onClick={handleAdd}>Add Vitals</Button>
-        </CardContent>
-      </Card>
-
-      {/* Display Vitals */}
-      {vitals.length === 0 ? (
-        <p className="text-muted-foreground">No vitals recorded yet.</p>
-      ) : (
-        vitals.map(v => (
-          <Card key={v._id}>
-            <CardHeader className="flex justify-between items-center">
-              <div>
-                <CardTitle>{new Date(v.date).toLocaleDateString()}</CardTitle>
-                <CardDescription>
-                  {v.bp && `BP: ${v.bp} | `}
-                  {v.sugar && `Sugar: ${v.sugar} | `}
-                  {v.weight && `Weight: ${v.weight}`}
-                </CardDescription>
-              </div>
-              <Button variant="destructive" size="sm" onClick={() => handleDelete(v._id)}>
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </CardHeader>
-            {v.note && <CardContent>{v.note}</CardContent>}
-          </Card>
-        ))
-      )}
-    </main>
-  );
+            {reports.length === 0 ? (
+                <p className="text-muted-foreground">No reports uploaded yet. Upload some from your dashboard!</p>
+            ) : (
+                reports.map((r) => (
+                    <Card key={r._id}>
+                        <CardHeader className="flex justify-between items-start">
+                            <div>
+                                <CardTitle className="flex items-center gap-2">
+                                    <FileText className="w-5 h-5 text-accent" /> {r.title || r.filename}
+                                </CardTitle>
+                                <CardDescription>
+                                    Date: {r.dateSeen || "Unknown"} <br />
+                                    Summary: {r.summary || "No summary available"}
+                                </CardDescription>
+                            </div>
+                            <div className="flex gap-2">
+                                <Link href={`/dashboard/report-page/${r._id}`} className="text-accent underline">
+                                    View
+                                </Link>
+                                <Button variant="destructive" size="sm" onClick={() => handleDelete(r._id)}>
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            File: {r.filename} <br />
+                            <a href={r.fileUrl} target="_blank" rel="noreferrer" className="text-accent underline">
+                                Download
+                            </a>
+                        </CardContent>
+                    </Card>
+                ))
+            )}
+        </main>
+    )
 }
+
+export default Reports
