@@ -91,7 +91,7 @@ const Reports = () => {
                                 </CardDescription>
                             </div>
                             <div className="flex gap-2">
-                                <Link href={`/dashboard/reportpage/${r._id}`} className="text-accent underline">
+                                <Link href={`/dashboard/report-page/${r._id}`} className="text-accent underline">
                                     View
                                 </Link>
                                 <Button variant="destructive" size="sm" onClick={() => handleDelete(r._id)}>

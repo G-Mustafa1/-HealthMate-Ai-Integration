@@ -3,8 +3,8 @@ require('dotenv').config();
 const { connectDB } = require("./config/database")
 const { profileRouter } = require('./router/profile');
 const { authRouter } = require('./router/auth');
-const { reportRouter } = require('./router/report')
-const { vitalsRouter } = require('./router/vitial')
+const { reportRouter } = require('./router/report');
+const { vitalsRouter } = require('./router/vitial');
 const cookieParser = require('cookie-parser');
 const cors = require('cors')
 const app = express();
