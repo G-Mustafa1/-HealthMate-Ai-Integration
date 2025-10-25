@@ -32,17 +32,22 @@ export default function ReportPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    // ✅ Fetch report details by ID
+    // ✅ Fetch report by ID (header JWT)
     useEffect(() => {
         const fetchReport = async () => {
             if (!params.id) return setError("Invalid report ID");
 
             try {
+                const token = localStorage.getItem("token");
+                if (!token) throw new Error("Not authenticated");
+
                 const res = await fetch(`${API_URL}/report/${params.id}`, {
-                    credentials: "include",
+                    headers: { Authorization: `Bearer ${token}` },
                 });
 
                 const data = await res.json();
+
+                console.log(data);
 
                 if (!res.ok) throw new Error(data.message || "Failed to fetch report");
                 setReport(data.report);
@@ -72,13 +77,14 @@ export default function ReportPage() {
         if (!result.isConfirmed) return;
 
         try {
+            const token = localStorage.getItem("token");
+            if (!token) throw new Error("Not authenticated");
+
             const res = await fetch(`${API_URL}/report/${params.id}`, {
                 method: "DELETE",
-                credentials: "include",
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                }
+                headers: { Authorization: `Bearer ${token}` },
             });
+
             const data = await res.json();
 
             if (!res.ok) throw new Error(data.message || "Failed to delete report");
@@ -97,7 +103,7 @@ export default function ReportPage() {
         else router.push("/dashboard");
     };
 
-    // ✅ Loading UI
+    // ✅ Loading state
     if (loading)
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -106,7 +112,7 @@ export default function ReportPage() {
             </div>
         );
 
-    // ✅ Error UI
+    // ✅ Error state
     if (error)
         return (
             <div className="flex flex-col items-center justify-center min-h-screen">
@@ -126,7 +132,7 @@ export default function ReportPage() {
 
     // ✅ Main UI
     return (
-        <div className="min-h-screen bg-background p-4  max-w-4xl mx-auto overflow-x-hidden">
+        <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto overflow-x-hidden">
             {/* Header */}
             <div className="flex items-center gap-2 mb-6">
                 <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
@@ -138,23 +144,15 @@ export default function ReportPage() {
             {/* Report Card */}
             <div className="bg-card p-6 rounded-lg shadow-md space-y-4">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-accent" />{" "}
-                    {report.title || report.filename}
+                    <FileText className="w-5 h-5 text-accent" /> {report.title || report.filename}
                 </h2>
 
-                <p>
-                    <strong>Date:</strong> {report.dateSeen || "Unknown"}
-                </p>
+                <p><strong>Date:</strong> {report.dateSeen || "Unknown"}</p>
 
                 {report.fileUrl ? (
                     <p>
                         <strong>File:</strong>{" "}
-                        <a
-                            href={report.fileUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-accent underline"
-                        >
+                        <a href={report.fileUrl} target="_blank" rel="noreferrer" className="text-accent underline">
                             View File
                         </a>
                     </p>
