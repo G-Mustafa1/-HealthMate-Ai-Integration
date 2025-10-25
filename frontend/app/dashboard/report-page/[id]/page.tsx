@@ -32,23 +32,25 @@ export default function ReportPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    // ✅ Fetch report by ID (header JWT)
     useEffect(() => {
         const fetchReport = async () => {
             if (!params.id) return setError("Invalid report ID");
 
             try {
-                const token = localStorage.getItem("token");
+                const token = localStorage.getItem("token")?.replace(/"/g, "") || "";
                 if (!token) throw new Error("Not authenticated");
 
                 const res = await fetch(`${API_URL}/report/${params.id}`, {
-                    headers: { Authorization: `Bearer ${token}` },
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
                 });
 
                 const data = await res.json();
-
-                console.log(data);
-
+                // console.log("Response status:", res.status);
+                // const data = await res.json();
+                // console.log("Response data:", data);
                 if (!res.ok) throw new Error(data.message || "Failed to fetch report");
                 setReport(data.report);
             } catch (err: any) {
@@ -58,11 +60,9 @@ export default function ReportPage() {
                 setLoading(false);
             }
         };
-
         fetchReport();
     }, [params.id]);
 
-    // ✅ Delete report
     const handleDelete = async () => {
         const result = await Swal.fire({
             title: "Are you sure?",
@@ -77,16 +77,18 @@ export default function ReportPage() {
         if (!result.isConfirmed) return;
 
         try {
-            const token = localStorage.getItem("token");
+            const token = localStorage.getItem("token")?.replace(/"/g, "") || "";
             if (!token) throw new Error("Not authenticated");
 
             const res = await fetch(`${API_URL}/report/${params.id}`, {
                 method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
             });
 
             const data = await res.json();
-
             if (!res.ok) throw new Error(data.message || "Failed to delete report");
 
             Swal.fire("Deleted!", "Your report has been deleted.", "success");
@@ -97,13 +99,11 @@ export default function ReportPage() {
         }
     };
 
-    // ✅ Navigate back
     const handleBack = () => {
         if (window.history.length > 1) router.back();
         else router.push("/dashboard");
     };
 
-    // ✅ Loading state
     if (loading)
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -112,7 +112,6 @@ export default function ReportPage() {
             </div>
         );
 
-    // ✅ Error state
     if (error)
         return (
             <div className="flex flex-col items-center justify-center min-h-screen">
@@ -121,7 +120,6 @@ export default function ReportPage() {
             </div>
         );
 
-    // ✅ No report found
     if (!report)
         return (
             <div className="flex flex-col items-center justify-center min-h-screen">
@@ -130,10 +128,8 @@ export default function ReportPage() {
             </div>
         );
 
-    // ✅ Main UI
     return (
-        <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto overflow-x-hidden">
-            {/* Header */}
+        <div className="min-h-screen p-4 max-w-4xl mx-auto">
             <div className="flex items-center gap-2 mb-6">
                 <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
                     <Heart className="w-5 h-5 text-primary-foreground" />
@@ -141,7 +137,6 @@ export default function ReportPage() {
                 <h1 className="text-2xl font-bold">HealthMate Report</h1>
             </div>
 
-            {/* Report Card */}
             <div className="bg-card p-6 rounded-lg shadow-md space-y-4">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
                     <FileText className="w-5 h-5 text-accent" /> {report.title || report.filename}
@@ -186,16 +181,9 @@ export default function ReportPage() {
                     </div>
                 )}
 
-                <div className="flex justify-between mt-4 text-sm text-muted-foreground">
-                    <p>Created: {new Date(report.createdAt).toLocaleString()}</p>
-                    <p>Updated: {new Date(report.updatedAt).toLocaleString()}</p>
-                </div>
-
                 <div className="mt-4 flex gap-2">
                     <Button onClick={handleBack}>Go Back</Button>
-                    <Button variant="destructive" onClick={handleDelete}>
-                        Delete Report
-                    </Button>
+                    <Button variant="destructive" onClick={handleDelete}>Delete Report</Button>
                 </div>
             </div>
         </div>
