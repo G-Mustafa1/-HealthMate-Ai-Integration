@@ -75,6 +75,9 @@ export default function ReportPage() {
             const res = await fetch(`${API_URL}/report/${params.id}`, {
                 method: "DELETE",
                 credentials: "include",
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                }
             });
             const data = await res.json();
 

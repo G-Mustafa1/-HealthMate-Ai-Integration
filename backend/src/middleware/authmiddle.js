@@ -3,7 +3,7 @@ const { User } = require('../models/user');
 
 const userAuth = async (req, res, next) => {
     try {
-        const token = req.cookies.token;
+        const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
         if (!token) {
             return res.status(401).send('Login first');
         }
@@ -12,7 +12,7 @@ const userAuth = async (req, res, next) => {
         const { id } = decoded;
         const user = await User.findById(id);
 
-        if(!user){
+        if (!user) {
             return res.status(404).send('User not found');
         }
 
