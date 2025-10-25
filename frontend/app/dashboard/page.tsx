@@ -180,7 +180,7 @@ export default function Dashboard() {
                   >
                     <span>{r.filename}</span>
                     {/* ✅ View Cloudinary file directly */}
-                    <Link href={`/dashboard/reportpage/${r._id}`} target="_blank" rel="noreferrer" className="text-accent underline">
+                    <Link href={`/dashboard/reportpage/${r._id}`} className="text-accent underline">
                       View
                     </Link>
                   </li>

@@ -123,7 +123,7 @@ export default function ReportPage() {
 
     // ✅ Main UI
     return (
-        <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto">
+        <div className="min-h-screen bg-background p-4  max-w-4xl mx-auto overflow-x-hidden">
             {/* Header */}
             <div className="flex items-center gap-2 mb-6">
                 <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">

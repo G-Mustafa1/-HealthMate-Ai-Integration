@@ -10,12 +10,12 @@ const cors = require('cors')
 const app = express();
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
   origin: process.env.CLIENT_URL, // Use environment variable or default to localhost
   credentials: true,// Allow cookies to be sent with requests
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  // methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 
 }))
 
