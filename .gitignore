@@ -6,7 +6,7 @@ dist
 
 
 # Frontend build
-Frontend/dist
+frontend/dist
 
 # Backend logs
-Backend/logs
+backend/logs
